@@ -204,6 +204,11 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# vscode
+.vscode
+
+.github/workflows
+
 # data and results -- since a subset of it is restricted
 data/
 results/
