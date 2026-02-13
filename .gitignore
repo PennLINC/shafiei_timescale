@@ -205,5 +205,5 @@ vignettes/*.pdf
 .Renviron
 
 # data and results -- since a subset of it is restricted
-./data/
-./results/
+data/
+results/

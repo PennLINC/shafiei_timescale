@@ -19,7 +19,7 @@ library(purrr)
 source("/Volumes/cbica/projects/developmental_gradients/gitrepo/shafiei_timescale/code/fcn_GAM_timescale.R")
 
 # load and prepare data for GAMs
-dataset <- 'HCPD_rest_age' # 'HBN_rest_noSI_age' 'HCPD_rest_age' 'HCPYA_rest'
+dataset <- 'HBN_rest_noSI_age' # 'HBN_rest_noSI_age' 'HCPD_rest_age' 'HCPYA_rest'
 metric <- 'timescale'
 dsmethod <- 'TRorig'
 
@@ -38,7 +38,7 @@ project_path <- '/Volumes/cbica/projects/developmental_gradients/gitrepo/shafiei
 data_path <- paste(project_path, sprintf('data/%s/', metric), sep = "")
 outpath <- paste(project_path, sprintf('results/%s/', metric), sep = "")
 ts.schaefer400.all <- read.csv(paste(data_path, 
-                                     sprintf('%s_acf/%s/concat/%s_concat_%s_%s_Schaefer_400-7_forR.tsv', 
+                                     sprintf('%s_%s_concat/%s_concat_%s_%s_Schaefer_400-7_forR.tsv', 
                                              dataset, dsmethod, dataset, 
                                              metricFileName, dsmethod), 
                                      sep = ""), 
@@ -145,157 +145,6 @@ ggsave(filename = paste(outpath, sprintf('%s_SArank_meanTS_%s_%s.png',
                         sep = ""), 
        plot = last_plot())
 ggsave(filename = paste(outpath, sprintf('%s_SArank_meanTS_%s_%s.svg', 
-                                         dataset, metric, dsmethod), 
-                        sep = ""), 
-       plot = last_plot())
-
-#################################
-# Plot mean TS vs SA rank for age bins
-#################################
-# --- Prepare SA rank table ---
-sa.schaefer400 <- read.csv(paste(project_path, 
-                                 'data/SchaeferParcellation/SArank_schaefer400_7Networks.csv', 
-                                 sep = ""))
-colnames(sa.schaefer400) <- c("SA.rank", "region")
-sa.schaefer400 <- sa.schaefer400 %>%
-  mutate(region = as.character(region))
-
-# --- Helper: given a subject subset, compute Spearman rho across regions ---
-compute_rho_for_group <- function(subdf) {
-  # mean across subjects for each region (columns 1:400)
-  cm <- colMeans(subdf[, 1:400, drop = FALSE], na.rm = TRUE)
-  df_cm <- tibble(region = names(cm), corticalMean = as.numeric(cm)) %>%
-    mutate(region = gsub("^X", "", region)) %>%
-    left_join(sa.schaefer400, by = "region")
-  
-  # Spearman correlation across regions
-  ct <- suppressWarnings(
-    cor.test(df_cm$corticalMean, df_cm$SA.rank,
-             method = "spearman", exact = FALSE)
-  )
-  
-  tibble(
-    rho = unname(ct$estimate),
-    p   = ct$p.value,
-    n_regions = sum(complete.cases(df_cm$corticalMean, df_cm$SA.rank))
-  )
-}
-
-# --- Create quarter-year bins ---
-breaks_q <- seq(8, 22, by = 0.25)
-
-res_by_bin <- ts.schaefer400.all %>%
-  filter(!is.na(age), age >= 8, age < 22) %>%
-  mutate(
-    # get integer bin index directly
-    bin_id = cut(age, breaks = breaks_q, include.lowest = TRUE,
-                 right = FALSE, labels = FALSE),
-    # midpoint of the bin
-    age_center = breaks_q[bin_id] + 0.125
-  ) %>%
-  group_by(age_center) %>%
-  group_modify(~ compute_rho_for_group(.x) %>% mutate(n_subjects = nrow(.x))) %>%
-  ungroup() %>%
-  arrange(age_center)
-
-# Inspect results
-print(res_by_bin)
-# A tibble with columns: age_bin, rho, p, n_regions, n_subjects
-
-# --- Plot rho vs. age bin ---
-rhoOfRho = cor.test(res_by_bin$age_center, 
-                    res_by_bin$rho, method = c("spearman"))
-
-ggplot(res_by_bin, aes(x = age_center, y = rho)) +
-  geom_point(color = "#F9BE85", size = 2) +
-  theme_classic() +
-  geom_smooth(method = 'lm', se = TRUE, fill = alpha(c("gray70"),.7), 
-              col = "black", size = .25, linewidth = 1) +
-  labs(x = "Age (quarter-year bin center)",
-       y = expression(Spearman~rho~"(corticalMean × SA rank)")) +
-  ggtitle(rhoOfRho$estimate) +
-  # scale_x_continuous(breaks = seq(8, 22, by = 1))
-  theme(
-    axis.text = element_text(size=12, family = "Arial", 
-                             color = c("black")),
-    axis.title.x = element_text(size=12, family ="Arial", 
-                                color = c("black")),
-    axis.title.y = element_text(size=12, family ="Arial", 
-                                color = c("black"))) +
-  scale_y_continuous(
-    limits = c(-0.1, 0.5),  # HBN: c(-0.2, 0.4)
-    expand = c(0, .01)
-  ) +
-  if (dataset == 'HCPYA_rest'){
-    scale_x_continuous(breaks=c(22, 24, 26, 28, 30, 32, 34, 36, 38), 
-                       expand = c(0,.45))
-  }else{
-    scale_x_continuous(breaks=c(6, 8, 10, 12, 14, 16, 18, 20, 22, 24), 
-                       expand = c(0,.45))
-  }
-
-ggsave(filename = paste(outpath, sprintf('%s_quarterage_SA_TS_%s_scatter_%s.png', 
-                                         dataset, metric, dsmethod), 
-                        sep = ""), 
-       plot = last_plot())
-ggsave(filename = paste(outpath, sprintf('%s_quarterage_SA_TS_%s_scatter_%s.svg', 
-                                         dataset, metric, dsmethod), 
-                        sep = ""), 
-       plot = last_plot())
-
-# --- Bin ages per year and compute rho per bin ---
-# Bin definition: [k, k+1) gets labeled with center k + 0.5
-res_by_bin <- ts.schaefer400.all %>%
-  filter(!is.na(age), age >= 8, age < 22) %>%
-  mutate(age_center = floor(age) + 0.5) %>%
-  group_by(age_center) %>%
-  # skip empty/small bins if you want; otherwise compute blindly
-  group_modify(~ compute_rho_for_group(.x) %>% mutate(n_subjects = nrow(.x))) %>%
-  ungroup()
-
-# Inspect results
-print(res_by_bin)
-# A tibble with columns: age_center, rho, p, n_regions, n_subjects
-
-# --- Plot rho vs. age bin ---
-rhoOfRho = cor.test(res_by_bin$age_center, 
-                    res_by_bin$rho, method = c("spearman"))
-
-ggplot(res_by_bin, aes(x = age_center, y = rho)) +
-  geom_point(color = "#F9BE85", size = 2) +
-  theme_classic() +
-  geom_smooth(method = 'lm', se = TRUE, fill = alpha(c("gray70"),.7), 
-              col = "black", size = .25, linewidth = 1) +
-  labs(x = "Age (one-year bin center)", 
-       y = expression(Spearman~rho~"(corticalMean × SA rank)")) +
-  ggtitle(rhoOfRho$estimate) + 
-  # scale_x_continuous(breaks = seq(8.5, 21.5, by = 1))
-  theme(
-    axis.text = element_text(size=12, family = "Arial", 
-                             color = c("black")),
-    axis.title.x = element_text(size=12, family ="Arial", 
-                                color = c("black")),
-    axis.title.y = element_text(size=12, family ="Arial", 
-                                color = c("black"))) +
-  # scale_y_continuous(
-  #   limits = c(-0.1, 0.5),  # HBN: c(0, 0.4)
-  #   expand = c(0, .01)
-  # ) +
-  if (dataset == 'HCPYA_rest'){
-      scale_x_continuous(breaks=c(22, 24, 26, 28, 30, 32, 34, 36, 38), 
-                         expand = c(0,.45),
-                         limits = c(22, 38))
-  }else{
-      scale_x_continuous(breaks=c(6, 8, 10, 12, 14, 16, 18, 20, 22, 24), 
-                         expand = c(0,.45),
-                         limits = c(8, 22))
-  }
-
-ggsave(filename = paste(outpath, sprintf('%s_yearlyage_SA_TS_%s_scatter_%s.png', 
-                                         dataset, metric, dsmethod), 
-                        sep = ""), 
-       plot = last_plot())
-ggsave(filename = paste(outpath, sprintf('%s_yearlyage_SA_TS_%s_scatter_%s.svg', 
                                          dataset, metric, dsmethod), 
                         sep = ""), 
        plot = last_plot())
