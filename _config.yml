@@ -1,0 +1,11 @@
+title: Mapping developmental changes in intrinsic timescale
+author: "Golia Shafiei"
+theme: minima
+#remote_theme: jekyll/minima
+plugins:
+  - jekyll-seo-tag
+
+url: "https://pennlinc.github.io"
+baseurl: "/shafiei_timescale"
+header_pages:
+  - about.md
