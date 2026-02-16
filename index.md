@@ -106,7 +106,7 @@ The project directory on CUBIC is `/cbica/projects/developmental_gradients`.
 
 ### 5. Run age analysis using Generalized Additive Models (GAMs)
 
-- The age analysis with GAMs is performed using R (version `4.2.2`). `scp_timescale.R` is the main script that runs GAMs for each dataset and generates a subset of final figures. `scp_timescale.R` calls the functions stored in `fcn_GAM_timescale.R'.
+- The age analysis with GAMs is performed using R (version `4.2.2`). `scp_timescale.R` is the main script that runs GAMs for each dataset and generates a subset of final figures. `scp_timescale.R` calls the functions stored in `fcn_GAM_timescale.R`.
 
 ### 6. Run additional analysis and visualize the results
 
