@@ -95,11 +95,11 @@ myplot.figure.set_figwidth(6)
 myplot.figure.set_figheight(6)
 plt.tight_layout()
 plt.savefig(inpath + 'results/timescale/' +
-            'hbn_hcpd_timescale_corr_v2.svg',
+            'hbn_hcpd_timescale_corr.svg',
             bbox_inches='tight', dpi=300,
             transparent=True)
 plt.savefig(inpath + 'results/timescale/' +
-            'hbn_hcpd_timescale_corr_v2.png',
+            'hbn_hcpd_timescale_corr.png',
             bbox_inches='tight', dpi=300,
             transparent=True)
 plt.close()
@@ -143,7 +143,7 @@ association_regions = combined_df[combined_df['category'] ==
 t_stat, p_value = ttest_ind(association_regions,
                             sensorimotor_regions, equal_var=False)
 
-nspin = 10000
+nspin = 1000
 spin_idx = fcn_timescale.get_spinidx(nspin=nspin, lhannot=lhlabels,
                                      rhannot=rhlabels, surfpath=surf_path)
 permuted_sa_rank = sa_rank['SArank'].values[spin_idx]
@@ -287,7 +287,6 @@ plt.ion()
 title = ('spearman r = %1.3f, p(spin) = %1.4f' % (corrval, pval))
 xlab = 'partial R2 - HCPD'
 ylab = 'partial R2 - HBN'
-# fcn_timescale.scatterregplot(x, y, title, xlab, ylab, 50)
 myplot = sns.scatterplot(x=x, y=y, palette=cmap_YlPu,
                          hue=sa_rank['SArank'].values,
                          legend=True)
@@ -300,166 +299,19 @@ myplot.axes.set_ylabel(ylab)
 myplot.figure.set_figwidth(6)
 myplot.figure.set_figheight(6)
 plt.tight_layout()
-plt.tight_layout()
 plt.savefig(inpath + 'results/timescale/' +
-            'hbn_hcpd_partialR2_corr_v2.svg',
+            'hbn_hcpd_partialR2_corr.svg',
             bbox_inches='tight', dpi=300,
             transparent=True)
 plt.savefig(inpath + 'results/timescale/' +
-            'hbn_hcpd_partialR2_corr_v2.png',
+            'hbn_hcpd_partialR2_corr.png',
             bbox_inches='tight', dpi=300,
             transparent=True)
 plt.close()
 
-################
-# correlate R2 from R with SA rank with spins
-################
-hbn = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
-                  'HBN_rest_noSI_age_timescale_age_r2_TRorig.csv')
-hcpd = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
-                   'HCPD_rest_age_timescale_age_r2_TRorig.csv')
-hcpya = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
-                    'HCPYA_rest_timescale_age_r2_TRorig.csv')
-
-combined_df = pd.concat([hbn['partialR2'],
-                         hcpd['partialR2'],
-                         hcpya['partialR2']], axis=1)
-labels = ['hbn', 'hcpd', 'hcpya']
-combined_data = np.array(combined_df)
-
-# copy region info
-region_names = regionlabels.copy()
-
-region_names_r2 = list(hbn['gam.age.schaefer.region'].values)
-
-sort_idx = []
-for region in region_names:
-    temp_idx = np.where(np.array(region_names_r2) == region)[0][0]
-    sort_idx.append(temp_idx)
-
-combined_data_reordered = combined_data.copy()
-combined_data_reordered = combined_data_reordered[sort_idx, :]
-
-# spin p
-nspins = 10000
-corrval = []
-pvalspin = []
-for iVar in range(len(labels)):
-    x = sa_rank['SArank'].values
-    y = combined_data_reordered[:, iVar]
-    corr_temp = scipy.stats.spearmanr(x, y)[0]
-    pval_temp = fcn_timescale.get_spinp(x, y, corrval=corr_temp, nspin=nspins,
-                                        lhannot=lhlabels, rhannot=rhlabels,
-                                        corrtype='spearman',
-                                        surfpath=surf_path)
-    corrval.append(corr_temp)
-    pvalspin.append(pval_temp)
-
-sa_spin = pd.DataFrame({'corrval': corrval,
-                        'pvalspin': pvalspin,
-                        'dataset': labels})
-sa_spin.to_csv(inpath + 'results/timescale/csvFiles/sa_r2_spin_results.csv',
-               index=False)
-
-###################
-# brain volume
-###################
-hbn_ts = pd.read_csv(inpath + 'data/timescale/' +
-                     'HBN_rest_noSI_age_TRorig_concat/' +
-                     'HBN_rest_noSI_age_concat_timescale_acf_TRorig' +
-                     '_Schaefer_400-7_forR.tsv', sep='\t')
-hcpd_ts = pd.read_csv(inpath + 'data/timescale/HCPD_rest_age_TRorig_concat/' +
-                      'HCPD_rest_age_concat_timescale_acf_TRorig' +
-                      '_Schaefer_400-7_forR.tsv', sep='\t')
-
-hcpd_vol = pd.read_csv(inpath + 'data/brain_volume/df_vol_hcpd.csv')
-
-x = pd.DataFrame(np.nanmean(np.array(hbn_ts.iloc[:, :400]), axis=0))
-y = pd.DataFrame(np.nanmean(np.array(hcpd_ts.iloc[:, :400]), axis=0))
-
-subjList_ts = [int(i.split('-')[1]) for i in list(hcpd_ts['participant_id'])]
-subjList_vol = hcpd_vol['subjID']
-
-x = np.array(subjList_ts)
-y = np.array(subjList_vol)
-xy, x_ind, y_ind = np.intersect1d(x, y, return_indices=True)
-
-ts_shared = hcpd_ts.iloc[x_ind, :]
-ts_shared.reset_index(inplace=True, drop=True)
-
-vol_shared = hcpd_vol.iloc[y_ind, :]
-vol_shared.reset_index(inplace=True, drop=True)
-
-x = np.nanmean(np.array(ts_shared.iloc[:, :400]), axis=1)
-y = np.array(vol_shared['vol'])
-
-corrvol = scipy.stats.spearmanr(x, y)[0]
-print('\nSpearman r between total brain volume and timescale in HCPD: %.4f'
-      % corrvol)
-
-# calculate parcel size
-lh_data = nib.load(lhlabels)
-rh_data = nib.load(rhlabels)
-
-lh_data = lh_data.darrays[0].data
-rh_data = rh_data.darrays[0].data
-
-parcelsize_lh = [np.count_nonzero(lh_data == int(i))
-                 for i in np.unique(lh_data)[1:]]
-parcelsize_rh = [np.count_nonzero(rh_data == int(i))
-                 for i in np.unique(rh_data)[1:]]
-parcelsize = parcelsize_lh + parcelsize_rh
-parcelsize = np.array(parcelsize)
-
-timescale_data = np.array(hcpd_ts.iloc[:, :400])
-hcpd_corr = []
-for iRow in range(len(hcpd_ts)):
-    subj_ts = timescale_data[iRow, :]
-    hcpd_corr.append(scipy.stats.pearsonr(parcelsize, subj_ts)[0])
-
-timescale_data = np.array(hbn_ts.iloc[:, :400])
-hbn_corr = []
-for iRow in range(len(hcpd_ts)):
-    subj_ts = timescale_data[iRow, :]
-    hbn_corr.append(scipy.stats.pearsonr(parcelsize, subj_ts)[0])
-
-print('\nSpearman r mean parcel size and timescale in HCPD: %.4f'
-      % np.mean(hcpd_corr))
-print('\nSpearman r mean parcel size and timescale in HBN: %.4f'
-      % np.mean(hbn_corr))
-
-# age effect
-hbn = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
-                  'HBN_rest_noSI_age_timescale_age_r2_TRorig.csv')
-hcpd = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
-                   'HCPD_rest_age_timescale_age_r2_TRorig.csv')
-
-# copy region info
-region_names = regionlabels.copy()
-region_names_r2 = list(hbn['gam.age.schaefer.region'].values)
-
-sort_idx = []
-for region in region_names:
-    temp_idx = np.where(np.array(region_names_r2) == region)[0][0]
-    sort_idx.append(temp_idx)
-
-ageeffect_data = np.array(hcpd['partialR2'])
-ageeffect_data_reordered = ageeffect_data[sort_idx]
-hcpd_corr_ageeffect = scipy.stats.pearsonr(parcelsize,
-                                           ageeffect_data_reordered)[0]
-
-ageeffect_data = np.array(hbn['partialR2'])
-ageeffect_data_reordered = ageeffect_data[sort_idx]
-hbn_corr_ageeffect = scipy.stats.pearsonr(parcelsize,
-                                          ageeffect_data_reordered)[0]
-
-print('\nSpearman r mean parcel size and age effect (R2) in HCPD: %.4f'
-      % np.mean(hcpd_corr_ageeffect))
-print('\nSpearman r mean parcel size and age effect (R2) in HBN: %.4f'
-      % np.mean(hbn_corr_ageeffect))
 
 ################
-# correlate other age stats from R -- will prob go
+# spatial overlap between age effects (R2)
 ################
 hbn = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
                   'HBN_rest_noSI_age_timescale_age_statistics_full_TRorig.csv')
@@ -469,7 +321,7 @@ hcpd = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
 hcpd['region'] = hcpd['region'].str.removeprefix('X')
 hbn['region'] = hbn['region'].str.removeprefix('X')
 
-# age stat of interest: GAM.age.rankR2sig, age.maturation, age.peakchange
+# age stat of interest: GAM.age.rankR2sig
 combined_df = pd.concat([hcpd['GAM.age.rankR2sig'],
                          hbn['GAM.age.rankR2sig']], axis=1)
 labels = ['hcpd', 'hbn']
@@ -579,30 +431,164 @@ plt.savefig(inpath + 'results/timescale/' +
             transparent=True)
 plt.close()
 
-# or just correlate and plot
+################
+# correlate R2 from R with SA rank with spins
+################
+hbn = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
+                  'HBN_rest_noSI_age_timescale_age_r2_TRorig.csv')
+hcpd = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
+                   'HCPD_rest_age_timescale_age_r2_TRorig.csv')
+hcpya = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
+                    'HCPYA_rest_timescale_age_r2_TRorig.csv')
+
+combined_df = pd.concat([hbn['partialR2'],
+                         hcpd['partialR2'],
+                         hcpya['partialR2']], axis=1)
+labels = ['hbn', 'hcpd', 'hcpya']
+combined_data = np.array(combined_df)
+
+# copy region info
+region_names = regionlabels.copy()
+
+region_names_r2 = list(hbn['gam.age.schaefer.region'].values)
+
+sort_idx = []
+for region in region_names:
+    temp_idx = np.where(np.array(region_names_r2) == region)[0][0]
+    sort_idx.append(temp_idx)
+
+combined_data_reordered = combined_data.copy()
+combined_data_reordered = combined_data_reordered[sort_idx, :]
+
+# spin p
 nspins = 10000
-x = combined_data_reordered['hcpd'].values
-y = combined_data_reordered['hbn'].values
+corrval = []
+pvalspin = []
+for iVar in range(len(labels)):
+    x = sa_rank['SArank'].values
+    y = combined_data_reordered[:, iVar]
+    corr_temp = scipy.stats.spearmanr(x, y)[0]
+    pval_temp = fcn_timescale.get_spinp(x, y, corrval=corr_temp, nspin=nspins,
+                                        lhannot=lhlabels, rhannot=rhlabels,
+                                        corrtype='spearman',
+                                        surfpath=surf_path)
+    corrval.append(corr_temp)
+    pvalspin.append(pval_temp)
+
+sa_spin = pd.DataFrame({'corrval': corrval,
+                        'pvalspin': pvalspin,
+                        'dataset': labels})
+sa_spin.to_csv(inpath + 'results/timescale/csvFiles/sa_r2_spin_results.csv',
+               index=False)
+
+###################
+# brain volume
+###################
+hbn_ts = pd.read_csv(inpath + 'data/timescale/' +
+                     'HBN_rest_noSI_age_TRorig_concat/' +
+                     'HBN_rest_noSI_age_concat_timescale_acf_TRorig' +
+                     '_Schaefer_400-7_forR.tsv', sep='\t')
+hcpd_ts = pd.read_csv(inpath + 'data/timescale/HCPD_rest_age_TRorig_concat/' +
+                      'HCPD_rest_age_concat_timescale_acf_TRorig' +
+                      '_Schaefer_400-7_forR.tsv', sep='\t')
+
+hcpd_vol = pd.read_csv(inpath + 'data/brain_volume/df_vol_hcpd.csv')
+
+subjList_ts = [int(i.split('-')[1]) for i in list(hcpd_ts['participant_id'])]
+subjList_vol = hcpd_vol['subjID']
+
+x = np.array(subjList_ts)
+y = np.array(subjList_vol)
+xy, x_ind, y_ind = np.intersect1d(x, y, return_indices=True)
+
+ts_shared = hcpd_ts.iloc[x_ind, :]
+ts_shared.reset_index(inplace=True, drop=True)
+
+vol_shared = hcpd_vol.iloc[y_ind, :]
+vol_shared.reset_index(inplace=True, drop=True)
+
+x = np.array(vol_shared['vol'])
+y = np.nanmean(np.array(ts_shared.iloc[:, :400]), axis=1)
 
 corrval = scipy.stats.spearmanr(x, y)[0]
-pval = fcn_timescale.get_spinp(x, y, corrval=corrval, nspin=nspins,
-                               lhannot=lhlabels, rhannot=rhlabels,
-                               corrtype='spearman',
-                               surfpath=surf_path)
+pval = scipy.stats.spearmanr(x, y)[1]
+print('\nSpearman r between total brain volume and timescale in HCPD: %.4f'
+      % corrval)
 
+# plt the relationship
 plt.ion()
-title = ('spearman r = %1.3f, p(spin) = %1.4f' % (corrval, pval))
-title = ('spearman r = %1.3f' % corrval)
-xlab = 'Age of maturation - HCPD'
-ylab = 'Age of maturation - HBN'
+title = ('spearman r = %1.3f, p = %1.4f' % (corrval, pval))
+xlab = 'total intracranial volume (TIV)'
+ylab = 'timescale'
 fcn_timescale.scatterregplot(x, y, title, xlab, ylab, 50)
 plt.tight_layout()
 plt.savefig(inpath + 'results/timescale/' +
-            'hbn_hcpd_agematuration_corr.svg',
+            'hcpd_tiv_corr.svg',
             bbox_inches='tight', dpi=300,
             transparent=True)
 plt.savefig(inpath + 'results/timescale/' +
-            'hbn_hcpd_agematuration_corr.png',
+            'hcpd_tiv_corr.png',
             bbox_inches='tight', dpi=300,
             transparent=True)
 plt.close()
+
+# calculate parcel size
+lh_data = nib.load(lhlabels)
+rh_data = nib.load(rhlabels)
+
+lh_data = lh_data.darrays[0].data
+rh_data = rh_data.darrays[0].data
+
+parcelsize_lh = [np.count_nonzero(lh_data == int(i))
+                 for i in np.unique(lh_data)[1:]]
+parcelsize_rh = [np.count_nonzero(rh_data == int(i))
+                 for i in np.unique(rh_data)[1:]]
+parcelsize = parcelsize_lh + parcelsize_rh
+parcelsize = np.array(parcelsize)
+
+timescale_data = np.array(hcpd_ts.iloc[:, :400])
+hcpd_corr = []
+for iRow in range(len(hcpd_ts)):
+    subj_ts = timescale_data[iRow, :]
+    hcpd_corr.append(scipy.stats.pearsonr(parcelsize, subj_ts)[0])
+
+timescale_data = np.array(hbn_ts.iloc[:, :400])
+hbn_corr = []
+for iRow in range(len(hcpd_ts)):
+    subj_ts = timescale_data[iRow, :]
+    hbn_corr.append(scipy.stats.pearsonr(parcelsize, subj_ts)[0])
+
+print('\nSpearman r mean parcel size and timescale in HCPD: %.4f'
+      % np.mean(hcpd_corr))
+print('\nSpearman r mean parcel size and timescale in HBN: %.4f'
+      % np.mean(hbn_corr))
+
+# age effect
+hbn = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
+                  'HBN_rest_noSI_age_timescale_age_r2_TRorig.csv')
+hcpd = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
+                   'HCPD_rest_age_timescale_age_r2_TRorig.csv')
+
+# copy region info
+region_names = regionlabels.copy()
+region_names_r2 = list(hbn['gam.age.schaefer.region'].values)
+
+sort_idx = []
+for region in region_names:
+    temp_idx = np.where(np.array(region_names_r2) == region)[0][0]
+    sort_idx.append(temp_idx)
+
+ageeffect_data = np.array(hcpd['partialR2'])
+ageeffect_data_reordered = ageeffect_data[sort_idx]
+hcpd_corr_ageeffect = scipy.stats.pearsonr(parcelsize,
+                                           ageeffect_data_reordered)[0]
+
+ageeffect_data = np.array(hbn['partialR2'])
+ageeffect_data_reordered = ageeffect_data[sort_idx]
+hbn_corr_ageeffect = scipy.stats.pearsonr(parcelsize,
+                                          ageeffect_data_reordered)[0]
+
+print('\nSpearman r mean parcel size and age effect (R2) in HCPD: %.4f'
+      % np.mean(hcpd_corr_ageeffect))
+print('\nSpearman r mean parcel size and age effect (R2) in HBN: %.4f'
+      % np.mean(hbn_corr_ageeffect))
