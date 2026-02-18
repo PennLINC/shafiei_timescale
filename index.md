@@ -94,7 +94,7 @@ The project directory on CUBIC is `/cbica/projects/developmental_gradients`.
 
 ### 2. Calculate intrinsic timescale for fMRI time series
 
-- Once all the time-series data are copied over, `scp_timescale_acf.py` is used to calculate the intrinsic timescale using the autocorrelation function of fMRI time series for each indiviudal and brain region.
+- Once all the time-series data are copied over, `scp_timescale_acf.py` is used to calculate the intrinsic timescale using the autocorrelation function of fMRI time series for each indiviudal and brain region. Note this script takes some time to run. I would recommend running it through `screen`.
 
 ### 3. Concatenate the timescale and QC data
 
