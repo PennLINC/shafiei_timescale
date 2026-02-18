@@ -90,11 +90,11 @@ The project directory on CUBIC is `/cbica/projects/developmental_gradients`.
 
 ### 1. Unzip datalad cloned data directories and copy required files
 
-- After cloning and getting the preprocessed data using datalad, the Python script `scp_unzip_xcpdfiles_xcpd.py` is used to unzip the indiviudal-level data and copy the desired files for downstream analyses (i.e., `.ptseries.nii' and QC files).
+- After cloning and getting the preprocessed data using datalad, the Python script `scp_unzip_xcpdfiles_xcpd.py` is used to unzip the indiviudal-level data and copy the desired files for downstream analyses (i.e., `.ptseries.nii` and QC files).
 
 ### 2. Calculate intrinsic timescale for fMRI time series
 
-- Once all the time-series data are copied over, `scp_timescale_acf.py` is used to calculate the intrinsic timescale using the autocorrelation function of fMRI time series for each indiviudal and brain region. Note this script takes some time to run. I would recommend running it through `screen`.
+- Once all the time-series data are copied over, `scp_timescale_acf.py` is used to calculate the intrinsic timescale using the autocorrelation function of fMRI time series for each indiviudal and brain region. Note this script takes some time to run. I would recommend running it via `screen`.
 
 ### 3. Concatenate the timescale and QC data
 
