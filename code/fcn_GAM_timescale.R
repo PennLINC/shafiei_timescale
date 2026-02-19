@@ -27,17 +27,34 @@ gam.fit.smooth <- function(measure, atlas, dataset, region, smooth_var,
   # GAM derivatives
   # Get derivatives of the smooth function using finite differences
   # derivative at 200 indices of smooth_var with a simultaneous CI
-  derv <- derivatives(gam.model, term = sprintf('s(%s)',smooth_var), 
-                      interval = "simultaneous", unconditional = F)
+  smooth_term <- sprintf("s(%s)", smooth_var)
+  derv <- if ("select" %in% names(formals(gratia::derivatives))) {
+    derivatives(gam.model, select = smooth_term,
+                interval = "simultaneous", unconditional = FALSE)
+  } else {
+    derivatives(gam.model, term = smooth_term,
+                interval = "simultaneous", unconditional = FALSE)
+  }
+
+  # Harmonize derivative output across gratia versions.
+  lower_col <- if ("lower" %in% names(derv)) "lower" else ".lower_ci"
+  upper_col <- if ("upper" %in% names(derv)) "upper" else ".upper_ci"
+  deriv_col <- if ("derivative" %in% names(derv)) "derivative" else ".derivative"
+  if (!("data" %in% names(derv)) && (smooth_var %in% names(derv))) {
+    derv$data <- derv[[smooth_var]]
+  }
+  if (!(deriv_col %in% names(derv))) {
+    stop("Could not find derivative column in gratia::derivatives() output.")
+  }
   
   # Identify derivative significance window(s)
   # add "sig" column (TRUE/FALSE) to derv
   derv <- derv %>%
     # derivative is sig if the lower CI is not < 0 while the upper CI is > 0
     # (i.e., when the CI does not include 0)
-    mutate(sig = !(0 > lower & 0 < upper))
+    mutate(sig = !(0 > .data[[lower_col]] & 0 < .data[[upper_col]]))
   # add "sig_deriv derivatives column where non-significant derivatives are set to 0
-  derv$sig_deriv = derv$derivative*derv$sig
+  derv$sig_deriv = derv[[deriv_col]] * derv$sig
   
   # GAM statistics
   # F value for the smooth term and GAM-based significance of the smooth term
@@ -63,7 +80,7 @@ gam.fit.smooth <- function(measure, atlas, dataset, region, smooth_var,
   sse.nullmodel <- sum((gam.nullmodel$y - gam.nullmodel$fitted.values)^2)
   partialRsq <- (sse.nullmodel - sse.model)/sse.nullmodel
   ### effect direction
-  mean.derivative <- mean(derv$derivative)
+  mean.derivative <- mean(derv[[deriv_col]])
   # if the average derivative is less than 0, make the effect size estimate negative
   if(mean.derivative < 0){
     partialRsq <- partialRsq*-1}
