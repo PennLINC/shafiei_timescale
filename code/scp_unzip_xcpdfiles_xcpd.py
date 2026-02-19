@@ -4,7 +4,7 @@ import re
 import glob
 import zipfile
 import numpy as np
-import datalad.api as dl
+# import datalad.api as dl
 
 dataset = 'HCPYA'
 
@@ -16,7 +16,7 @@ elif dataset == 'HCPYA':
     datapath = '/cbica/projects/developmental_gradients/data_pmacs/HCPYA_xcpd/'
 
 
-ds = dl.Dataset(datapath)
+# ds = dl.Dataset(datapath)
 if dataset == 'HCPYA':
     file_list = glob.glob(os.path.join(datapath, '*.zip'))
 else:
