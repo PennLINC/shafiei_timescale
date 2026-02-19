@@ -8,7 +8,7 @@ title: Reproducibility Guide
 - [I. Project Information](#i-project-information)
 - [II. CUBIC Project Directory Structure](#ii-cubic-project-directory-structure)
 - [III. Code Documentation](#iii-code-documentation)
-  - [0. Install required python packages](#0-install-required-python-packages)
+  - [0. Install required packages and libraries](#0-install-required-packages-and-libraries)
   - [1. Unzip datalad cloned data directories and copy required files](#1-unzip-datalad-cloned-data-directories-and-copy-required-files)
   - [2. Calculate intrinsic timescale for fMRI time series](#2-calculate-intrinsic-timescale-for-fmri-time-series)
   - [3. Concatenate the timescale and QC data](#3-concatenate-the-timescale-and-qc-data)
@@ -76,7 +76,7 @@ The project directory on CUBIC is `/cbica/projects/developmental_gradients`.
 
 | **Step** | **Task** | **Notes** |
 | --- | --- | --- |
-| 0 | Install required python packages |  |
+| 0 | Install required packages and libraries |  |
 | 1 | Unzip datalad cloned data directories and copy required files (Python) |  |
 | 2 | Calculate intrinsic timescale for fMRI time series (Python) |  |
 | 3 | Concatenate the timescale and QC data (Python) |  |
@@ -84,9 +84,10 @@ The project directory on CUBIC is `/cbica/projects/developmental_gradients`.
 | 5 | Run age analysis using Generalized Additive Models (GAMs) (R) |  |
 | 6 | Run additional analysis and visualize the results (Python) |  |
 
-### 0. Install required python packages
+### 0. Install required packages and libraries
 
 - `~/shafiei_timescale/code/python_env` folder contains the required `.yml` file and a series of commands to create and activate the Python environment used in this project.
+- `~/shafiei_timescale/code/r_env` folder contains the instructions and files required to create and activate the R environment used in this project.
 
 ### 1. Unzip datalad cloned data directories and copy required files
 
