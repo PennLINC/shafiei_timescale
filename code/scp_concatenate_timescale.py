@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 
-dataset = 'HBN'
+dataset = 'HCPYA'
 ds_method = 'TRorig'  # can be 'TRmean' or 'TRskip' or 'TRorig' or 'segment'
 project_path = '/cbica/projects/developmental_gradients/'
 
