@@ -592,3 +592,121 @@ print('\nSpearman r mean parcel size and age effect (R2) in HCPD: %.4f'
       % np.mean(hcpd_corr_ageeffect))
 print('\nSpearman r mean parcel size and age effect (R2) in HBN: %.4f'
       % np.mean(hbn_corr_ageeffect))
+
+################
+# correlate TS with tSNR in HCPD
+################
+hcpd_ts = pd.read_csv(inpath + 'data/timescale/HCPD_rest_age_TRorig_concat/' +
+                      'HCPD_rest_age_concat_timescale_acf_TRorig' +
+                      '_Schaefer_400-7_forR.tsv', sep='\t')
+hcpd_tsnr = pd.read_csv(inpath + 'data/timescale/' +
+                        'HCPD_rest_age_TRorig_concat_tsnr/' +
+                        'HCPD_rest_age_concat_tsnr_TRorig' +
+                        '_Schaefer_400-7_forR.tsv', sep='\t')
+
+x = pd.DataFrame(np.nanmean(np.array(hcpd_tsnr.iloc[:, :400]), axis=0))
+y = pd.DataFrame(np.nanmean(np.array(hcpd_ts.iloc[:, :400]), axis=0))
+
+x = np.array(x).flatten()
+y = np.array(y).flatten()
+
+nspins = 10000
+corrval = scipy.stats.spearmanr(x, y)[0]
+pval = fcn_timescale.get_spinp(x, y, corrval=corrval, nspin=nspins,
+                               lhannot=lhlabels, rhannot=rhlabels,
+                               corrtype='spearman',
+                               surfpath=surf_path)
+plt.ion()
+title = ('spearman r = %1.3f, p(spin) = %1.4f' % (corrval, pval))
+xlab = 'tSNR - HCPD'
+ylab = 'timescale - HCPD'
+myplot = sns.scatterplot(x=x, y=y, palette=cmap_YlPu,
+                         hue=sa_rank['SArank'].values,
+                         legend=True)
+sns.regplot(x=x, y=y, scatter=False, ax=myplot,
+            line_kws=dict(color='k'))
+sns.despine(ax=myplot, trim=False)
+myplot.axes.set_title(title)
+myplot.axes.set_xlabel(xlab)
+myplot.axes.set_ylabel(ylab)
+myplot.figure.set_figwidth(6)
+myplot.figure.set_figheight(6)
+plt.tight_layout()
+plt.savefig(inpath + 'results/timescale/' +
+            'hcpd_timescale_tsnr_corr.svg',
+            bbox_inches='tight', dpi=300,
+            transparent=True)
+plt.savefig(inpath + 'results/timescale/' +
+            'hcpd_timescale_tsnr_corr.png',
+            bbox_inches='tight', dpi=300,
+            transparent=True)
+plt.close()
+
+################
+# correlate R2 from R with tSNR in HCPD
+################
+hcpd = pd.read_csv(inpath + 'results/timescale/csvFiles/' +
+                   'HCPD_rest_age_timescale_age_r2_TRorig.csv')
+hcpd_tsnr = pd.read_csv(inpath + 'data/timescale/' +
+                        'HCPD_rest_age_TRorig_concat_tsnr/' +
+                        'HCPD_rest_age_concat_tsnr_TRorig' +
+                        '_Schaefer_400-7_forR.tsv', sep='\t')
+
+hcpd_r2 = hcpd['partialR2']
+hcpd_r2 = np.array(hcpd_r2)
+
+# copy region info
+region_names = regionlabels.copy()
+
+region_names_r2 = list(hcpd['gam.age.schaefer.region'].values)
+
+sort_idx = []
+for region in region_names:
+    temp_idx = np.where(np.array(region_names_r2) == region)[0][0]
+    sort_idx.append(temp_idx)
+
+hcpd_r2_data_reordered = hcpd_r2.copy()
+hcpd_r2_data_reordered = hcpd_r2_data_reordered[sort_idx]
+
+hcpd_r2_data_reordered = pd.DataFrame(hcpd_r2_data_reordered,
+                                      columns=['hcpd'])
+
+hcpd_r2_data_reordered['hcpd-rank'] = hcpd_r2_data_reordered['hcpd'].rank()
+
+# spin p
+nspins = 10000
+
+x = pd.DataFrame(np.nanmean(np.array(hcpd_tsnr.iloc[:, :400]), axis=0))
+x = np.array(x).flatten()
+y = hcpd_r2_data_reordered['hcpd'].values
+
+corrval = scipy.stats.spearmanr(x, y)[0]
+pval = fcn_timescale.get_spinp(x, y, corrval=corrval, nspin=nspins,
+                               lhannot=lhlabels, rhannot=rhlabels,
+                               corrtype='spearman',
+                               surfpath=surf_path)
+plt.ion()
+title = ('spearman r = %1.3f, p(spin) = %1.4f' % (corrval, pval))
+xlab = 'tSNR - HCPD'
+ylab = 'partial R2 - HCPD'
+myplot = sns.scatterplot(x=x, y=y, palette=cmap_YlPu,
+                         hue=sa_rank['SArank'].values,
+                         legend=True)
+sns.regplot(x=x, y=y, scatter=False, ax=myplot,
+            line_kws=dict(color='k'))
+sns.despine(ax=myplot, trim=False)
+myplot.axes.set_title(title)
+myplot.axes.set_xlabel(xlab)
+myplot.axes.set_ylabel(ylab)
+myplot.figure.set_figwidth(6)
+myplot.figure.set_figheight(6)
+plt.tight_layout()
+plt.savefig(inpath + 'results/timescale/' +
+            'hcpd_partialR2_tsnr_corr.svg',
+            bbox_inches='tight', dpi=300,
+            transparent=True)
+plt.savefig(inpath + 'results/timescale/' +
+            'hcpd_partialR2_tsnr_corr.png',
+            bbox_inches='tight', dpi=300,
+            transparent=True)
+plt.close()
