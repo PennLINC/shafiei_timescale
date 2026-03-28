@@ -47,7 +47,7 @@ Intrinsic timescale is a commonly used measure of spontaneous neural dynamics th
 
 **Datasets**
 
-- HCP-D as discovery developmental sample (replication); HBN as replication discover sample; HCP-YA as an independent sample for sensitivty analysis
+- HCP-D as discovery developmental sample (replication); HBN as replication discover sample; HCP-YA as an independent sample for sensitivity analysis
 
 <!-- **Conference Presentations**
 
@@ -87,7 +87,7 @@ The project directory on CUBIC is `/cbica/projects/developmental_gradients`.
 ### 0. Install required packages and libraries
 
 - `~/shafiei_timescale/code/python_env` folder contains the required `.yml` file and a series of commands to create and activate the Python environment used in this project.
-- `~/shafiei_timescale/code/r_env` folder contains the instructions and files required to create and activate the R environment used in this project.
+- `~/shafiei_timescale/code/r_env` folder contains the instructions and files required to create and activate the R environment used in this project. Note that the R environment installation was done locally on a MacOS.
 
 ### 1. Unzip datalad cloned data directories and copy required files
 
