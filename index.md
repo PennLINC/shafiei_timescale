@@ -37,7 +37,7 @@ Intrinsic timescale is a commonly used measure of spontaneous neural dynamics th
 
 | **Project Start Date** | November 2023 |
 | --- | --- |
-| **Current Project Status** | Pre-submission |
+| **Current Project Status** | Preprint on bioRxiv |
 
 **Code and Communication**
 
